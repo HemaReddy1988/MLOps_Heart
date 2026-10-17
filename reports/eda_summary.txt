@@ -1,0 +1,35 @@
+Rows: 303
+
+Original columns: 14
+
+Duplicate rows: 0
+
+Missing values:
+age              0
+sex              0
+cp               0
+trestbps         0
+chol             0
+fbs              0
+restecg          0
+thalach          0
+exang            0
+oldpeak          0
+slope            0
+ca               4
+thal             2
+num              0
+target_binary    0
+
+Original target distribution:
+num
+0    164
+1     55
+2     36
+3     35
+4     13
+
+Binary target distribution:
+target_binary
+0    164
+1    139
