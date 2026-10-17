@@ -27,8 +27,8 @@ jobs:
       - name: Download dataset
         run: python src/download_data.py
 
-      - name: Run automated tests
-        run: python -m pytest -v
-
       - name: Verify model training
         run: python src/train.py
+
+      - name: Run automated tests
+        run: python -m pytest -v
