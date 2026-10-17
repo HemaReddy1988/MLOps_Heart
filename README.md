@@ -220,3 +220,51 @@ Logistic Regression was selected based on its observed cross-validation and held
 The dataset pipeline, EDA, model comparison, MLflow tracking, seven automated tests, GitHub Actions workflow, FastAPI service and Docker execution have been verified in the development environment. The project has also been reproduced and tested in the university virtual lab.
 
 For submission, refer to the accompanying implementation evidence, report and demonstration video.
+
+
+## 16. Kubernetes Deployment
+
+The HeartGuard prediction API was deployed to a local Kubernetes cluster using Minikube in the university virtual lab.
+
+### Kubernetes Resources
+
+The deployment uses the following manifests:
+
+- `k8s/deployment.yaml` — defines the API Deployment, container image, replica count, resource limits, and health probes.
+- `k8s/service.yaml` — exposes the API using a Kubernetes NodePort Service.
+
+### Deployment Steps
+
+Start the Minikube cluster:
+
+```bash
+minikube start --driver=docker --cpus=2 --memory=4096
+```
+
+Apply the Kubernetes manifests:
+
+```bash
+minikube kubectl -- apply -f k8s/
+```
+
+Check the deployment, pod, and service:
+
+```bash
+minikube kubectl -- get deployments,pods,services
+```
+
+Access the service:
+
+```bash
+minikube service heartguard-api-service --url
+```
+
+The API was verified through the Kubernetes Service. The `/health` endpoint returned HTTP 200, and the `/predict` endpoint returned a prediction response.
+
+### Deployment Evidence
+
+Screenshots document the running Kubernetes pod, deployment and service resources, and successful API endpoint tests.
+
+### Deployment Scope
+
+This implementation demonstrates deployment on a local Minikube Kubernetes cluster within the university virtual lab. It is not a public-cloud deployment, and external public accessibility has not been established.
