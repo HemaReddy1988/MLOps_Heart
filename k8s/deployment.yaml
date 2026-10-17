@@ -1,0 +1,42 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heartguard-api
+  labels:
+    app: heartguard-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: heartguard-api
+  template:
+    metadata:
+      labels:
+        app: heartguard-api
+    spec:
+      containers:
+        - name: heartguard-api
+          image: heartguard-api:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
