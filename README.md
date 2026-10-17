@@ -1,90 +1,222 @@
 # HeartGuard: Reproducible Heart Disease Prediction
 
-## Overview
+## 1. Overview
 
-HeartGuard is an educational MLOps project using the UCI Heart Disease dataset. It demonstrates data acquisition, exploratory data analysis, preprocessing, model comparison, experiment tracking, and automated testing.
+HeartGuard is an educational MLOps project using the UCI Heart Disease dataset. It demonstrates data acquisition, exploratory data analysis (EDA), preprocessing, model comparison, experiment tracking, automated testing, API serving, containerization, and continuous integration.
 
-This project is for learning and experimentation. It is not intended for clinical diagnosis or medical decision-making.
+**Disclaimer:** This project is intended for educational purposes only. It is not clinically validated and must not be used for diagnosis or medical decision-making.
 
-## Dataset
+## 2. Dataset
 
-The project uses the UCI Heart Disease dataset obtained through `ucimlrepo`.
+The project uses the UCI Heart Disease dataset, acquired using `ucimlrepo`.
 
-The original target column is `num`. For binary classification, the target is defined as:
-- `0`: `num == 0`
-- `1`: `num > 0`
+- Dataset size: 303 rows and 14 original columns.
+- Original target: `num`.
+- Binary target: `0` when `num == 0`, and `1` when `num > 0`.
+- Missing values in the original dataset: 4 in `ca` and 2 in `thal`.
+- Binary target distribution: 164 negative and 139 positive cases.
 
-## Technology Stack
+The dataset is downloaded at runtime and is not committed to the repository.
+
+## 3. Technology Stack
 
 - Python
 - pandas, NumPy, Matplotlib and Seaborn
 - scikit-learn
 - MLflow
 - pytest
-- FastAPI and Uvicorn (API implementation planned)
+- FastAPI and Uvicorn
+- Docker
+- GitHub Actions
 
-## Setup
+## 4. Project Structure
 
-Create and activate a virtual environment.
+- `src/download_data.py` — downloads the dataset.
+- `src/eda.py` — performs data quality checks and generates EDA outputs.
+- `src/train.py` — trains and evaluates Logistic Regression and Random Forest pipelines.
+- `src/track_experiments.py` — logs experiment results using MLflow.
+- `src/api.py` — serves predictions through FastAPI.
+- `tests/` — contains pipeline and API tests.
+- `reports/` — contains EDA outputs and report evidence.
+- `artifacts/` — contains locally generated trained models and model comparison results.
+- `Dockerfile` — defines the container image.
+- `.github/workflows/ci.yml` — defines the automated CI workflow.
 
-On Windows PowerShell:
+## 5. Environment Setup
+
+### Linux / University VM
+
+From the repository root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+### Windows PowerShell
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-## Data Acquisition
+## 6. Data Acquisition and EDA
 
 Download the dataset:
 
-```powershell
-python src\download_data.py
+```bash
+python src/download_data.py
 ```
 
-## Exploratory Data Analysis
+Generate EDA summaries and plots:
+
+```bash
+python src/eda.py
+```
+
+Outputs are saved under `reports/`, including the EDA plots and summary.
+
+## 7. Model Training
 
 Run:
 
-```powershell
-python src\eda.py
+```bash
+python src/train.py
 ```
 
-EDA plots and summary outputs are saved under `reports`.
+The pipeline compares Logistic Regression and Random Forest using a stratified train/test split and stratified cross-validation. Preprocessing includes median imputation and standardization for numeric features, and most-frequent imputation and one-hot encoding for categorical features.
 
-## Model Training
+The script saves trained pipelines and model comparison results under `artifacts/`.
+
+## 8. Experiment Tracking
 
 Run:
 
-```powershell
-python src\train.py
+```bash
+python src/track_experiments.py
 ```
 
-The training script compares Logistic Regression and Random Forest models.
+The experiment is named `HeartDisease-Model-Comparison`. MLflow records parameters, metrics, model artifacts and related experiment information.
 
-## Experiment Tracking
+To open the MLflow UI locally:
+
+```bash
+mlflow ui --host 127.0.0.1 --port 5000
+```
+
+Then open `http://127.0.0.1:5000` in a browser on the same machine.
+
+## 9. Automated Testing
 
 Run:
 
-```powershell
-python src\track_experiments.py
-```
-
-The experiment is named `HeartDisease-Model-Comparison`. MLflow records model parameters, evaluation metrics, and model artifacts.
-
-## Automated Tests
-
-Run:
-
-```powershell
+```bash
 python -m pytest -v
 ```
 
-## Current Evaluation
+The current test suite contains seven tests covering dataset structure, binary target handling, pipeline predictions, missing-value handling, API health, valid predictions and invalid input validation.
 
-The current experiment results favor Logistic Regression based on cross-validation and held-out ROC-AUC. These results are preliminary and should not be interpreted as evidence of clinical suitability.
+## 10. Prediction API
 
-## Project Status
+**Generate the model artifacts before starting the API.**
 
-Data acquisition, EDA, model comparison, MLflow tracking, and baseline automated tests have been implemented. Packaging validation, CI/CD, API serving, containerization, deployment, monitoring, and final reporting are being developed.
+Start the service:
+
+```bash
+python -m uvicorn src.api:app --host 127.0.0.1 --port 8000
+```
+
+Open the interactive API documentation at `http://127.0.0.1:8000/docs`.
+
+Health endpoint:
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+Prediction endpoint: `POST /predict`
+
+Example request:
+
+```json
+{
+  "age": 55,
+  "trestbps": 130,
+  "chol": 240,
+  "thalach": 150,
+  "oldpeak": 1.0,
+  "sex": 1,
+  "cp": 2,
+  "fbs": 0,
+  "restecg": 1,
+  "exang": 0,
+  "slope": 2,
+  "ca": 0,
+  "thal": 3
+}
+```
+
+The API returns a binary prediction, the estimated probability of class 1, the model name and an educational-use disclaimer.
+
+## 11. Docker
+
+**Build the model artifacts before building the image.**
+
+```bash
+python src/download_data.py
+python src/train.py
+docker build -t heartguard-api:1.0 .
+docker run -d --name heartguard -p 8000:8000 heartguard-api:1.0
+```
+
+Verify the running container:
+
+```bash
+docker ps
+curl http://127.0.0.1:8000/health
+```
+
+Open `http://127.0.0.1:8000/docs` in a browser on the machine hosting the container.
+
+To stop the container:
+
+```bash
+docker stop heartguard
+```
+
+The host must permit Docker access and the selected port. External access depends on the host's network and firewall configuration.
+
+## 12. Continuous Integration
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` installs dependencies, downloads the dataset, trains the models and runs the automated tests on pushes and pull requests targeting `main` or `master`.
+
+The latest recorded workflow run passed.
+
+## 13. Evaluation Results
+
+Observed evaluation results:
+
+| Metric | Logistic Regression | Random Forest |
+|---|---:|---:|
+| Cross-validation accuracy | 0.8471 | 0.8139 |
+| Cross-validation ROC-AUC | 0.9025 | 0.8947 |
+| Test accuracy | 0.8852 | 0.8689 |
+| Test ROC-AUC | 0.9665 | 0.9481 |
+| Test recall | 0.9286 | 0.9286 |
+
+Logistic Regression was selected based on its observed cross-validation and held-out ROC-AUC results. The test set is small, so these estimates are preliminary and should not be interpreted as evidence of clinical suitability.
+
+## 14. Limitations
+
+- The dataset is small and is not representative of all patient populations.
+- Evaluation metrics depend on the dataset split and preprocessing choices.
+- The API is an educational demonstration, not a clinically validated service.
+- Production use would require additional security, access control, monitoring, model validation and deployment controls.
+
+## 15. Project Status
+
+The dataset pipeline, EDA, model comparison, MLflow tracking, seven automated tests, GitHub Actions workflow, FastAPI service and Docker execution have been verified in the development environment. The project has also been reproduced and tested in the university virtual lab.
+
+For submission, refer to the accompanying implementation evidence, report and demonstration video.
