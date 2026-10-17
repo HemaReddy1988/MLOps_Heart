@@ -268,3 +268,35 @@ Screenshots document the running Kubernetes pod, deployment and service resource
 ### Deployment Scope
 
 This implementation demonstrates deployment on a local Minikube Kubernetes cluster within the university virtual lab. It is not a public-cloud deployment, and external public accessibility has not been established.
+
+## 17. Monitoring and Logging
+
+HeartGuard includes application logging and Prometheus-compatible HTTP metrics.
+
+### Request Logging
+
+The FastAPI middleware records:
+- HTTP method and request path
+- HTTP status code
+- Request duration in seconds
+- Request ID in the response header (`X-Request-ID`)
+
+Application logs are written to the container's standard output and can be inspected using Kubernetes logs.
+
+### Prometheus Metrics
+
+The `/metrics` endpoint exposes Prometheus-formatted metrics, including:
+- `heartguard_http_requests_total` — total HTTP requests, labelled by method, endpoint, and status.
+- `heartguard_http_request_duration_seconds` — request latency histogram.
+
+### Verification
+
+The monitoring endpoint was tested through the Kubernetes NodePort Service:
+
+```bash
+curl http://192.168.49.2:30080/metrics
+```
+
+Request counters and latency metrics were verified after API traffic was generated.
+
+The metrics endpoint is available for Prometheus scraping. A Prometheus/Grafana dashboard has not been configured in this implementation.
